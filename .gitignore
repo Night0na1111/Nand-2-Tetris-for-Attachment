@@ -1,0 +1,11 @@
+# Ignore Vivado generated files
+*.runs/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.sim/
+*.xpr       # the binary project file
+*.jou
+*.log
+*.str
+*.xpr   
