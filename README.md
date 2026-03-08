@@ -17,6 +17,7 @@ git push
 :推到Github上。
 
 ================================================
+
 cd (你專案的路徑)
 D: 
 vivado -mode gui -source Nand2Tetris_FPGA.tcl
