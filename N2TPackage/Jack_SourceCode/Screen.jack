@@ -1,0 +1,341 @@
+class Screen {
+    static Array base;      //Base Address
+    static boolean color;
+    static Array bitMasks;  //跟加法很像的Look up table。
+
+
+    function void init() {
+        var int i, mask;
+        
+        let base = 16384;   //螢幕的期使座標在 16384
+        let color = true;
+        
+        //值接照般加法的Table。 Mother F.... N2t的官方編譯器不接受32768這個值。 不是因為它不能被執行，是Compiler會拒絕他。
+        // 所以...看來只能Runtime時再計算表格來繞過這個限制了。
+
+        let bitMasks = Array.new(16);
+        let mask = 1;
+        let i = 0;
+
+        while (i < 16) {
+            let bitMasks[i] = mask;
+            let mask = mask + mask;
+            let i = i + 1;
+        }
+        //let bitMasks = Array.new(16);
+        //let bitMasks[0] = 1; //0001
+        //let bitMasks[1] = 2; //0010
+        //let bitMasks[2] = 4; //0100
+        //let bitMasks[3] = 8; //1000
+        //let bitMasks[4] = 16;
+        //let bitMasks[5] = 32;
+        //let bitMasks[6] = 64;
+        //let bitMasks[7] = 128;
+        //let bitMasks[8] = 256;
+        //let bitMasks[9] = 512;
+        //let bitMasks[10] = 1024;
+        //let bitMasks[11] = 2048;
+        //let bitMasks[12] = 4096;
+        //let bitMasks[13] = 8192;
+        //let bitMasks[14] = 16384;
+        //let bitMasks[15] = -32768;
+        return;
+    }
+
+
+    //清空螢幕，比較像是用雪白複寫一切。
+    //螢幕需要 512 × 256 bit, 然後每一個記憶體位置可以存16Bit, 所以，/16 = 8192
+    function void clearScreen() {
+        var int i;
+
+        let i = 0;
+
+        while (i < 8192) {
+            do Memory.poke(base + i, 0); //poke = 寫入
+            let i = i + 1;
+        }
+        return;
+    }
+
+    //設定顏色，這個我不需要解釋
+    function void setColor(boolean b) {
+        let color = b;
+        return;
+    }
+
+
+
+    //劃出一個Pixel，決定要在記憶體的哪裡出現。
+    //因為一個記憶體位置Hold 16bit的關西，我們得要換算一下。
+    function void drawPixel(int x, int y) {
+        var int addr, wordIndex, xDiv, xMod, v, mask, temp;
+
+        // 快速計算 x 座標在記憶體中的位置。
+        let xDiv = 0;   //可以被除以幾次，代表跳過幾個記憶體位置。
+        let xMod = x;   //在[那個記憶體位置]的第幾位。
+        
+        //不要用Math.divide(x,y)，慢，很慢。
+        //只要Xmod(餘數)還大於16，就-16，然後標註多跑了一回。
+        while (xMod > 15) {
+            let xMod = xMod - 16;
+            let xDiv = xDiv + 1;
+        }
+        
+        // 找Y座標。
+        //N2T的螢幕是左到右，換一行然後再左到右，記憶體中也一樣。
+        //因為寬度是512bit,所以每一行是32個記憶體位置。
+        //所以要找到X,Y最標的確切記憶體位置，要先確定在哪一列(ROW)，再確定是哪一個記憶體位置，再確定哪一個BIT。
+        //        word0    word1    word2  ...  word31
+        //row 0  [16px]  [16px]  [16px]  ...  [16px]   <- memory address 16384
+        //row 1  [16px]  [16px]  [16px]  ...  [16px]   <- memory address 16384 + 32
+        //row 2  [16px]  [16px]  [16px]  ...  [16px]   <- memory address 16384 + 64
+        //row 3  [16px]  [16px]  [16px]  ...  [16px]   <- memory address 16384 + 96
+
+        // 輸入的Y位置 * 32 = 那一列(_)最左邊的那一個Pixel的記憶體位置。
+        // 再加上xDiv，鎖定那一列的確切行(|)。 確定是在哪個記憶體位置。
+        //（使用加倍代替乘法）
+        let temp = y;
+        let temp = temp + temp;  // *2
+        let temp = temp + temp;  // *4
+        let temp = temp + temp;  // *8
+        let temp = temp + temp;  // *16
+        let temp = temp + temp;  // *32
+
+        let wordIndex = temp + xDiv; //位置 = Y記憶體位置 + X記憶體位置。
+        let addr = base + wordIndex; //加上基準，就得到了記憶體位置。
+        let mask = bitMasks[xMod];   //把隊的Bitmask放到 mask中。
+        let v = Memory.peek(addr);   //拿出完整的16bit mem data
+
+        if (color) {
+            let v = v | mask;       //如果想要畫黑色，就or Bitmask。
+        } else {
+            let v = v & (~mask);    //畫白色111111011111111 & 記憶體的Data。 就不會動到其他位置的東西了。
+        }
+
+        do Memory.poke(addr, v);
+        return;
+    }
+
+    //劃出一條線
+    function void drawLine(int x1, int y1, int x2, int y2) {
+        var int x, y, dx, dy, diff, a, b;
+        var int temp;
+        
+        // 情形一，目的地是水平的。(Y軸不變)
+        if (y1 = y2) {
+            if (x1 > x2) {  //這個公式預設X2是右邊(比較大的)。所以如果X1比較大，就反轉兩個。
+                let temp = x1;
+                let x1 = x2;
+                let x2 = temp;
+            }
+
+            let x = x1;
+            while (~(x > x2)) {     //x !> x2 就...從X1 畫到X2, Y軸不變。
+                do Screen.drawPixel(x, y1);
+                let x = x + 1;
+            }
+            return;
+        }
+        
+        // 情形二，這東西垂直。和平行一樣的公式。
+        if (x1 = x2) {
+
+            if (y1 > y2) {
+                let temp = y1;
+                let y1 = y2;
+                let y2 = temp;
+            }
+
+            let y = y1;     
+            while (~(y > y2)) {
+                do Screen.drawPixel(x1, y);
+                let y = y + 1;
+            }
+
+            return;
+        }
+        
+        
+        // 處理斜線(Bresenham 算法)。
+        let dx = Math.abs(x2 - x1); //x的距離差異
+        let dy = Math.abs(y2 - y1); //Y的距離差異
+        
+        let a = 0;
+        let b = 0;
+        let diff = 0;   //diff是用來判斷目前朝想要的方向"誤差多少"，這東西的數學公式感覺像是魔法。
+        
+        while (~((a > dx) | (b > dy))) {    //當a不大於dx or b不大於dy時
+            if (x1 < x2) {      //向右走
+                if (y1 < y2) {
+                    do Screen.drawPixel(x1 + a, y1 + b); //向上走
+                } else {
+                    do Screen.drawPixel(x1 + a, y1 - b); //向下走
+                }
+            } else {            //向左走
+                if (y1 < y2) {
+                    do Screen.drawPixel(x1 - a, y1 + b); //向上走
+                } else {
+                    do Screen.drawPixel(x1 - a, y1 - b); //向下走
+                }
+            }
+            
+            //決定接下來往哪走，這兩個if會拿diff打乒乓球。
+            //然後因為dy dx數值上的關係，出來的線會還滿平均的。
+            if (diff < 0) {     //x軸不夠，跨的步數+1, diff + dy
+                let a = a + 1;
+                let diff = diff + dy;
+            } else {
+                let b = b + 1;  //y軸不夠，跨的步數+1, diff -dx
+                let diff = diff - dx;
+            }
+        }
+        
+        return;
+    }
+
+
+    //劃出一個長方形
+    function void drawRectangle(int x1, int y1, int x2, int y2) {
+        var int y;
+        var int startWord, endWord, word;
+        var int startBit, endBit;
+        var int addr, value, i;
+        var int yOffset;
+        
+        //避免數值溢流，確保東西都在允許的座標內。
+        if (x1 > x2) { return; }
+        if (y1 > y2) { return; }
+        if (x1 < 0) { let x1 = 0; }
+        if (y1 < 0) { let y1 = 0; }
+        if (x2 > 511) { let x2 = 511; }
+        if (y2 > 255) { let y2 = 255; }
+        
+        // 計算起始和結束的記憶體位置
+        // 跟DrawPixel用的是一樣的方法。
+
+        //找X1在第幾WORD 一樣是除法，一樣有餘數。
+        let startWord = 0;
+        let i = x1;
+        while (i > 15) {
+            let i = i - 16;
+            let startWord = startWord + 1;
+        }
+        let startBit = i;  //現在有Startword 和 StartBit
+        
+        //找X2在第幾WORD
+        let endWord = 0;
+        let i = x2;
+        while (i > 15) {
+            let i = i - 16;
+            let endWord = endWord + 1;
+        }
+        let endBit = i; //現在有Endword 和 EndBit
+        
+
+        // 再來一樣，y*32 找出列(-)的offset。
+        let y = y1;
+        while (~(y > y2)) {
+            // 計算這一行的起始位址（y * 32）
+            let yOffset = y;
+            let yOffset = yOffset + yOffset;  // *2
+            let yOffset = yOffset + yOffset;  // *4
+            let yOffset = yOffset + yOffset;  // *8
+            let yOffset = yOffset + yOffset;  // *16
+            let yOffset = yOffset + yOffset;  // *32
+            
+
+            //情況一，一個記憶體寬而已，沒有要跨行or字元。
+            if (startWord = endWord) {
+               
+                let addr = base + yOffset + startWord;  //得出他的記憶體確切位置
+                let value = Memory.peek(addr);          //讀值進Value
+                let i = startBit;
+
+                while (~(i > endBit)) {                 //一路從Startbit跑到Endbit
+                    if (color) {                        //同一招，黑的就or bitmask
+                        let value = value | bitMasks[i];
+                    } else {
+                        let value = value & (~bitMasks[i]); //白的就 and 反bitmask
+                    }
+                    let i = i + 1;
+                }
+                do Memory.poke(addr, value);            //寫回
+
+            } else {
+                // 跨多個記憶體空間，分三段，頭 中 尾。
+                
+                // 頭(從前面複製貼上的，只有改終點=16 而不是endbit)
+                let addr = base + yOffset + startWord;
+                let value = Memory.peek(addr);
+                let i = startBit;
+
+                while (i < 16) {
+                    if (color) {
+                        let value = value | bitMasks[i];
+                    } else {
+                        let value = value & (~bitMasks[i]);
+                    }
+                    let i = i + 1;
+                }
+                do Memory.poke(addr, value);
+                
+
+                // 中，不用像前面一樣小心翼翼的在乎確切的Bit，照著記憶體順著寫滿就好。
+                let word = startWord + 1;
+
+                while (word < endWord) {    //不要<= 我們不想寫到最後一個記憶體位置。
+                    let addr = base + yOffset + word;
+                    if (color) {
+                        do Memory.poke(addr, -1);  // 黑，全部 1
+                    } else {
+                        do Memory.poke(addr, 0);   // 白，全部 0
+                    }
+                    let word = word + 1;
+                }
+                
+                // 尾 (跟頭同樣的公式，不過改起始點=0)
+                let addr = base + yOffset + endWord;
+                let value = Memory.peek(addr);
+                let i = 0;
+
+                while (~(i > endBit)) {
+                    if (color) {
+                        let value = value | bitMasks[i];
+                    } else {
+                        let value = value & (~bitMasks[i]);
+                    }
+                    let i = i + 1;
+                }
+
+                do Memory.poke(addr, value);
+            }
+            
+            let y = y + 1; //換下一行
+        }
+        
+        return;
+    }
+
+    //畫一個元
+    function void drawCircle(int cx, int cy, int r) {
+        var int dx, dy, rSquared;
+        
+        //確保數值在合理範圍內
+        if (r < 0) { return; }
+        if (r > 181) { let r = 181; }
+        
+        let rSquared = r * r;
+        let dy = r;
+        
+        while (~(dy < 0)) {     //這公式太複雜@@，直接般書中的。 爆掉的話請回去參考書。
+            let dx = Math.sqrt(rSquared - (dy * dy));
+            do Screen.drawLine(cx - dx, cy - dy, cx + dx, cy - dy);
+            do Screen.drawLine(cx - dx, cy + dy, cx + dx, cy + dy);
+            let dy = dy - 1;
+        }
+        
+        return;
+    }
+}
+//GOD, This thing ended up so long that it tapped me all out.
+//Special characters in comments fxxk up the compiler. This is giving me a heart attack.

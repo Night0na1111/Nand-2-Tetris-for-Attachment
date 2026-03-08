@@ -1,0 +1,90 @@
+class Paddle {
+
+    //別用Static, 不然創建一個Object時，Object無法與他互動。
+
+    field int x,y;
+    field int direction;
+    field int width, height; //高度其實可以訂死，但我們構築的時候再做好了。
+
+    constructor Paddle new(int inX, int inY, int inWidth){ //初始化一張全新的板子
+        let x = inX;
+        let y = inY;
+        let width = inWidth;
+        let height = 5;
+        let direction = 0;
+        do showPaddle();
+    
+        return this; //就只是大規模回傳整個constructor, 不用一個一個數值pass.
+    }
+
+    ////////////////////////////////////////////////////////功能區
+    method void unLoad(){    //記憶體清除
+         do Memory.deAlloc(this);
+         return;    //就算沒有回傳東西，還是要記得寫Return
+    }
+
+    method void draw(){     //畫板子
+        do Screen.drawRectangle(x, y, x+width, y+height);
+        return;
+    }
+
+    //進行板子的畫與解畫
+    method void showPaddle(){
+        do Screen.setColor(true);
+        do draw();
+
+        return;
+    }
+
+    method void hidePaddle(){
+        do Screen.setColor(false);
+        do draw();
+
+        return;
+    }
+
+    //方向處理 0不宜, 1左, 2又
+    method void paddleDirection(int inDirection) {
+        let direction = inDirection;
+        return;
+    }
+    //////////////////////////////////////////////////////////////////
+    
+    //左右Paddle的座標，碰撞偵測用，沒有這兩個資料出不去@@
+    method int getLeft() {
+        return x;
+    }
+
+    method int getRight() {
+        return x + width;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////
+    method void movePaddle(){
+        //如果左移，就先隱藏，左移，然後顯示。
+
+	    if (direction = 1) {
+
+            do hidePaddle();
+
+            //邊界檢查，這個不做會造成大面積的記憶體複寫。
+            let x = x - 4;
+            if (x < 0) { let x = 0; }
+            
+            do showPaddle();
+        }
+
+        if (direction = 2){
+
+            do hidePaddle();
+
+            let x = x + 4;
+            if ((x + width) > 511) { let x = 511 - width; }
+
+            do showPaddle();
+        }
+
+        return;
+    }
+}

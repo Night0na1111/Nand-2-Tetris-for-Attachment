@@ -1,0 +1,247 @@
+class Output { //這個Class負責"字元"的輸出。
+
+    static Array characterMaps;
+    static int cursorRow, cursorCol;
+
+    function void init(){
+        
+        //載入定義好的Bitmap.
+        do Output.initMap();
+
+        //初始化鼠標位置。
+        let cursorRow = 0; //row是高度(23)
+        let cursorCol = 0; //col是寬度(63)
+        return;
+    }
+    ///////////////////////////////////////////////////////////////// 初始化Bitmap
+        function void initMap() {
+            var int i, mapSize, c;
+        
+            let mapSize = 1397;                      //(整個Array的大小)127 * 11 
+            let characterMaps = Array.new(mapSize);  //我們把整個Bitmap壓入這個巨大的Array中。
+            let i = 0;
+
+            //BITMAP,第一個字元代表這是AscII的甚麼字， 後面的11個字元代表他每一行的資料(bit)。
+            //第一個字元常用"c", x11 就是給他的陣列位置開始。
+
+            // space (32)
+            do Output.create(32, 0,0,0,0,0,0,0,0,0,0,0);
+
+            //'0'..'9' (48..57)
+            do Output.create(48, 30,33,35,37,41,49,33,33,30,0,0);
+            do Output.create(49, 12,28,12,12,12,12,12,12,30,0,0);
+            do Output.create(50, 30,33,1,2,4,8,16,32,63,0,0);
+            do Output.create(51, 30,33,1,6,1,1,33,33,30,0,0);
+            do Output.create(52, 2,6,10,18,34,63,2,2,2,0,0);
+            do Output.create(53, 63,32,62,1,1,1,33,33,30,0,0);
+            do Output.create(54, 14,16,32,62,33,33,33,33,30,0,0);
+            do Output.create(55, 63,1,2,4,8,16,16,16,16,0,0);
+            do Output.create(56, 30,33,33,30,33,33,33,33,30,0,0);
+            do Output.create(57, 30,33,33,33,31,1,2,4,56,0,0);
+
+            // ':' (58)
+            do Output.create(58, 0,0,12,12,0,0,12,12,0,0,0);
+
+            // '-' (45)
+            do Output.create(45, 0,0,0,0,0,63,0,0,0,0,0);
+
+            // 'A'..'Z' (65..90)
+            do Output.create(65, 12,18,33,33,63,33,33,33,33,0,0);
+            do Output.create(66, 62,33,33,62,33,33,33,33,62,0,0);
+            do Output.create(67, 30,33,32,32,32,32,32,33,30,0,0);
+            do Output.create(68, 60,34,33,33,33,33,33,34,60,0,0);
+            do Output.create(69, 63,32,32,62,32,32,32,32,63,0,0);
+            do Output.create(70, 63,32,32,62,32,32,32,32,32,0,0);
+            do Output.create(71, 30,33,32,32,39,33,33,33,30,0,0);
+            do Output.create(72, 33,33,33,63,33,33,33,33,33,0,0);
+            do Output.create(73, 30,12,12,12,12,12,12,12,30,0,0);
+            do Output.create(74, 15,3,3,3,3,3,35,35,30,0,0);
+            do Output.create(75, 33,34,36,56,36,34,33,33,33,0,0);
+            do Output.create(76, 32,32,32,32,32,32,32,32,63,0,0);
+            do Output.create(77, 33,51,45,33,33,33,33,33,33,0,0);
+            do Output.create(78, 33,49,41,37,35,33,33,33,33,0,0);
+            do Output.create(79, 30,33,33,33,33,33,33,33,30,0,0);
+            do Output.create(80, 62,33,33,62,32,32,32,32,32,0,0);
+            do Output.create(81, 30,33,33,33,33,33,37,34,29,0,0);
+            do Output.create(82, 62,33,33,62,36,34,33,33,33,0,0);
+            do Output.create(83, 31,32,32,30,1,1,1,33,30,0,0);
+            do Output.create(84, 63,12,12,12,12,12,12,12,12,0,0);
+            do Output.create(85, 33,33,33,33,33,33,33,33,30,0,0);
+            do Output.create(86, 33,33,33,33,33,33,18,18,12,0,0);
+            do Output.create(87, 33,33,33,33,33,33,45,51,33,0,0);
+            do Output.create(88, 33,33,18,12,12,18,33,33,33,0,0);
+            do Output.create(89, 33,33,18,12,12,12,12,12,12,0,0);
+            do Output.create(90, 63,1,2,4,8,16,32,32,63,0,0);
+
+            // 小小的偷懶一下，小寫=大寫。 如果記憶體吃緊的話，可以在以後的Function中跳過小寫，然後指向大寫。但這邊為了方便先這樣八。
+            let c = 97;   //a
+            while (c < 123) {  //z
+                do Output.copyUpperToLower(c - 32, c);
+                let c = c + 1;
+            }
+        return;
+        }
+
+        //把Bitmap從Code中，複製到矩陣中。這沒辦法簡化，因為所有要接收的值都要定義一個口。
+        function void create(char c,int r0,int r1,int r2,int r3,int r4,int r5,int r6,int r7,int r8,int r9,int r10) {
+            var int base;
+            let base = c * 11;
+            let characterMaps[base + 0] = r0;
+            let characterMaps[base + 1] = r1;
+            let characterMaps[base + 2] = r2;
+            let characterMaps[base + 3] = r3;
+            let characterMaps[base + 4] = r4;
+            let characterMaps[base + 5] = r5;
+            let characterMaps[base + 6] = r6;
+            let characterMaps[base + 7] = r7;
+            let characterMaps[base + 8] = r8;
+            let characterMaps[base + 9] = r9;
+            let characterMaps[base + 10] = r10;
+        return;
+        }
+
+        //在Array中進行複製。
+        function void copyUpperToLower(char upper, char lower) {
+            var int i, ub, lb;
+            let ub = upper * 11;    //大寫的Array位置
+            let lb = lower * 11;    //小寫的Array位置
+            let i = 0;
+
+            while (i < 11) {
+                let characterMaps[lb + i] = characterMaps[ub + i]; //把大寫的[i],複製到小寫的[i]
+                let i = i + 1;
+            }
+        return;
+        }
+    /////////////////////////////////////////////////////////////////
+    // = 0~23, || 0 ~63 移動"準星?目前的位置"
+    function void moveCursor(int row, int col) {
+        if ((row > -1) & (row < 23) & (col > -1) & (col < 64)) {
+            let cursorRow = row;
+            let cursorCol = col;
+            do Output.printChar(32);  // 清空移動到的格子。 畢竟都移動到那了，等著給他寫入。
+            do Output.backSpace();    
+        }
+    return;
+    }
+
+    //////////////////////////////////////////////////////////////////
+    //印出一個字元，想要快的話我們大可直接Direct mem access.
+    //但用Screen API也型。
+    function void printChar(char c){
+        var Array map;
+        var int rowBits;
+        var int x0, y0, r, k, mask;
+        var int px, py;
+
+        let map = Output.getMap(c); //取的那個字元的記憶體位置。
+        let x0 = cursorCol * 8;
+        let y0 = cursorRow * 11;
+
+        do Screen.setColor(false); //白色
+        do Screen.drawRectangle(x0, y0, x0 + 7, y0 + 10); //畫方形清空
+        do Screen.setColor(true);  //改回黑色
+
+        let r = 0;
+        //重複11次，因為11行高。
+        while (r < 11) {        
+            let rowBits = map[r];  //rowBits = 目前這一行的值
+            let k = 0;
+            let mask = 1;
+
+            while (k < 8) {        //同一招mask老招，在加法看過。
+                //每次比較那個Bit的數值，如果成立，就畫一個像素。然後mask*2, 讓下一個bit =1。
+                if ((rowBits & mask) > 0) {
+                    let px = x0 + 7 - k;        //向右一格，然後不要用8，東西都會歪一格。
+                    let py = y0 + r;            //向下一格
+                    do Screen.drawPixel(px, py);
+                }
+                let mask = mask + mask;
+                let k = k + 1;
+            }
+            let r = r + 1;
+        }
+
+        let cursorCol = cursorCol + 1; //移動到下一COL ||
+
+        if (cursorCol > 63) {          //過63就+1行_ ， 回到0列|  (中文的行列是反的，我永遠都搞不懂@@)
+            let cursorCol = 0;
+            let cursorRow = cursorRow + 1;
+            if (cursorRow > 22) { let cursorRow = 0; }
+        }
+        return;
+    
+    }
+    //輔助工具，回傳Bitmap在記憶體中的位置。
+    function Array getMap(char c) {
+        var int base;
+        var Array a;
+
+        if (c < 0) { let c = 0; } //確保東西在合理範圍內。
+        if (c > 126) { let c = 32; }
+
+        let base = c * 11;        //這個字元在Array中的位置。
+        let a = characterMaps + base; //Jack語言的特性之一，直接拿Array當數用。 他會回傳"記憶體位置"。所以是:a= 記憶體位置+offset.
+        return a;                 //下11個位置是Bitmap。
+    }
+
+    ////////////////////////////////////////////////////////////////////////
+    // 印出字串。
+    function void printString(String s){
+        var int i;
+        let i = 0;
+        while (i < s.length()) { //用String的length 功能當長度，會跑完整個字串。
+            do Output.printChar(s.charAt(i)); //charAt 會回傳指定位置的字元。 然後剩下的就交給printChar處理。
+            let i = i + 1;
+        }
+        return;
+    }
+
+    //印出數字
+    function void printInt(int i){
+        var String s;
+
+        //不需要負號處理 setInt已經處理過了。
+        //if (i < 0) {
+        //    do Output.printChar(45);
+        //    let i = -i;
+        //}
+
+        let s = String.new(6); //宣告一個長度6的String(因為Jack最大是2^15=32768。 所以5個字+一個正負號=6)
+        do s.setInt(i);         //給他一個值，setInt我們的寫法是一個數字一個坑(連負號也是)。
+        do Output.printString(s);   //利用前面寫的Print String把整個東西寫完。
+        do s.dispose();         //再丟掉String
+        return;
+    }
+
+    //移動到下一行
+    function void printLn(){
+
+        let cursorRow = cursorRow + 1; // _ +1
+        let cursorCol = 0;             // | =0
+        if (cursorRow > 22) { let cursorRow = 0; } //繞回
+        return;
+    }
+
+
+    //退一格
+    function void backSpace(){
+        //回去一格
+        if (cursorCol > 0) {
+            let cursorCol = cursorCol - 1;
+        } else {                //如果Col <= 0 ,
+            if (cursorRow > 0) {    
+                let cursorRow = cursorRow - 1; //回上一行，去尾巴。
+                let cursorCol = 63;
+            }   //如果這兩個判斷都失敗，就...不要亂動。
+        }
+
+        //抹除這一格的東西，然後把準星放到空白之前。
+        do Output.printChar(32);
+        if (cursorCol > 0) {
+            let cursorCol = cursorCol - 1;
+        }
+        return;
+    }
+
+}

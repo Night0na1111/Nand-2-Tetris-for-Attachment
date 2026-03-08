@@ -1,0 +1,134 @@
+class String{
+
+    field Array str;
+    field int length;   //maxLength 和 Length不一樣。 一個是最大上限，另一個是"目前到哪了"
+    field int max;      //max = maxLength
+
+    ////////////////////////////////////////////////////新字串
+    constructor String new(int maxLength){
+
+        //確保不會出現大小為0的String，然後對，這裡用= 不是==
+        if(maxLength = 0){
+            let maxLength = 1;
+        }
+
+        let str = Array.new(maxLength);
+        let length = 0;
+        let max = maxLength;
+
+        return this; //整個object打包回傳。
+    }
+    //////////////////////////////////////////////////////////////記憶體拋棄。
+    method void dispose(){
+        do str.dispose();   // 先把宣告的array 用array的記憶體拋棄丟掉
+        do Memory.deAlloc(this);  // 再用記憶體含市庫，丟掉這整個東西。
+        return;
+    }
+
+    //////////////////////////////////////////////////////////////回傳字串長度。
+    method int length(){
+        return length;
+    }
+
+    //////////////////////////////////////////////////////////////回傳在j位置的字元。
+    method char charAt(int j){
+        return str[j];
+    }
+
+    //////////////////////////////////////////////////////////////把j位置的東西改為C
+    method void setCharAt(int j, char c){
+        let str[j] = c;
+        return;    
+    }
+
+    //////////////////////////////////////////////////////////////把C加到字串尾巴，然後回傳整個東西
+    method String appendChar(char c){
+         // 得先確保不會溢流
+        if (length < max) {
+            let str[length] = c;
+            let length = length + 1;    //把字元目前的長度+1
+        }
+        return this; //String 在這是個們宣告的「物件」，直接回傳Str 會出事第二次。
+    }
+
+    //////////////////////////////////////////////////////////////擦除最後一個字元。
+    method void eraseLastChar(){
+        if (length > 0) {       //確保不會變-1
+            let str[length - 1] = 0;    //記得String是從0開始 所以lenght =2 時，實際上str只用到str[1]。所以這邊要-1。
+            let length = length - 1; 
+        }
+        return;
+    }
+    //////////////////////////////////////////////////////////////把呼叫的string"數值"化。
+    //一個STRING陣列中保存的都是ASCII值。連數字也是。但是今天要計算數字不可能用ASCII值，所以我們要把ASCII瑪轉回數字，然後寫回去。
+    //書上的定義假設進來的東西「都是數字」。所以不用考慮字元。
+    //在記憶體中，String都用Ascii存，所以每個數值都需要轉換(str[i] - 48)。
+    //(d = str[i] - 48;) (val = val * 10 + d;)，十進位，前一位進位 再加下一位。
+    method int intValue(){
+        var int outVal, i, d;
+        var boolean negative;
+    
+        let outVal = 0;
+        let i = 0;
+        let negative = false;
+    
+        // 檢查負號，如果第一格是負號
+        if ((length > 0) & (str[0] = 45)) {  // 45 是-的Ascii
+            let negative = true;
+            let i = 1;  // 跳過他
+        }
+    
+        while (i < length) {
+            let d = str[i] - 48;  // 把東西轉成數字然後暫存。
+            let outVal = (outVal * 10) + d; //進位 + 個位數
+            let i = i + 1;
+        }
+    
+        // 回給他負號，這邊回傳的東西就是"數字"了
+        if (negative) {
+            return -outVal;
+        } else {
+            return outVal;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////讓string保存 數字的Ascii代表。(一個欄位一個字)
+    method void setInt(int val) {
+        let length = 0;  //重新指向字串的0，變相清空整個東西。
+    
+        if (val < 0) {          //如果是負的
+            let val = -val;     //轉成證的
+            do appendChar(45);  //加上負號(就不用立flag)
+        }
+    
+        do int2String(val);  // call副函式。
+    return;
+}
+    method void int2String(int val) {
+        var int lastDigit;
+        var int c;                  //每個遞迴都有自己的c，c存目前%出來數字的ASCII
+    
+        let lastDigit = val - ((val / 10) * 10);  // lastDigit = 基本上就是%10，Val是待處理數值。
+        let c = lastDigit + 48;  // c 存 ASCII
+    
+        if (val < 10) {
+            do appendChar(c);  //小於10就寫入c，因為用appendChar 我們不用管字串目前到哪了。
+        } else {
+            do int2String(val / 10);  //val有剩就/10 傳給下一層
+            do appendChar(c);         //一樣要寫入
+        }
+    return;
+}
+    //////////////////////////////////////////////////////////////
+
+
+    function char backSpace(){ //回傳Backspace
+        return 129;
+    }
+    function char doubleQuote(){    //回傳雙引號OWO
+        return 34;
+    } 
+    function char newLine(){   //回傳NewLine
+        return 128;
+    }
+}

@@ -1,0 +1,73 @@
+class Keyboard {
+
+    //初始化....不用
+    function void init() { return; }
+
+    //回傳目前按下的鍵盤按鍵（ASCII)
+    function char keyPressed() {
+        return Memory.peek(24576);
+    }
+
+    //等待「按下並放開」一個鍵，並回傳鍵碼(ASCII)
+    function char readChar() {
+        var char lastKey, currentKey;
+
+        while (currentKey = 0) {
+            let currentKey = Keyboard.keyPressed();
+        }
+
+        let lastKey = currentKey;
+
+        // 等到放開，不放開就在這無限執行，並嘗試取得新的Keypress
+        while (lastKey = currentKey) {
+            let currentKey = Keyboard.keyPressed();
+        }
+
+        // 在合理範圍內的話(<128)。就印出按下的字。
+        if (lastKey < String.newLine()) {
+            do Output.printChar(lastKey);
+        }
+
+        return lastKey;
+    }
+
+    // 這個Function 會 輸出在Argument時給他的message, 然後回傳使用者輸入的值。
+    function String readLine(String message) {
+        var char c;
+        var String line;
+
+        let c = 0;
+        let line = String.new(80); //創造一個能保存80字的line String(Which is a fancy array wrapper)
+
+        do Output.printString(message); //先輸出指定的訊息。
+
+        //接下來就是一個一個收字，然後印出。
+        while (true) {
+            let c = Keyboard.readChar();
+
+            if (c = String.newLine()) {         //如果收到Enter
+                do Output.println();            //螢幕上移動到下一行
+                return line;                    //回傳整個字串，結束迴圈
+            } else {
+                if (c = String.backSpace()) {   //如果收到後退
+                    if (line.length() > 0) {    //檢查能不能後退
+                        do Output.backSpace();  //可以的話就螢幕上磨除這一格
+                        do line.eraseLastChar();//String上也擦除一格
+                    }
+                } else {        //把收到的字，放到line的後面。
+                    do line.appendChar(c);
+                }
+            }
+        }
+        return line;  //OMG 我不知道為甚麼(好啦我很清楚這跟Compiler的語法判斷有關)，但是即使這行return 【永遠不可能被碰到】，一旦拿走編譯器就會拒絕編譯這整個東西。
+    }
+
+
+    // 讀數字
+    function int readInt(String message) {
+        var String line;            //用ASCII的方法存數字(因為鍵盤進來就是)。
+
+        let line = Keyboard.readLine(message);  //收入數值。
+        return line.intValue();     //把東西從ASCII轉成實際上的數字，然後回傳。
+    }
+}

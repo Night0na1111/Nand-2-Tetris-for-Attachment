@@ -4,8 +4,9 @@
 *.hw/
 *.ip_user_files/
 *.sim/
-*.xpr       # the binary project file
+*.xpr
 *.jou
 *.log
 *.str
-*.xpr   
+*.xpr  
+*.Nand2Tetris_FPGA/

@@ -1,0 +1,123 @@
+class Memory {
+    static Array freeBlocks;
+    static int heapBase;
+    static int length, next;
+
+    //初始化 heap 的 free list
+    //freeList邏輯。 第一個空間[0]會儲存說"這東西有多長"，第二個空間[1]會指向下一個能用的Free空間。 接下來就是存資料。
+    function void init() {
+        let heapBase = 2048;   //heal 打 RAM[2048] 開始。
+        let length = 0;
+        let next = 1;
+
+        // 一開始整段 heap 都是 free
+        let freeBlocks = heapBase;
+        let freeBlocks[length] = 14335; // 可用長度
+        let freeBlocks[next] = null;
+        return;
+    }
+/////////////////////////////////////////////////////////////////////////////////
+    // PEEK 讀 RAM[address]
+    function int peek(int address) {    
+        var Array memory;        //一樣N2T的特性。Array實際上指向的是"一個記憶體位置"。 然後Array[1] = "那個記憶體位置+1"
+        let memory = address;    //Array比較像是一個變數，給他一個值，然後再回傳。
+                                 //不會造成記憶體外流的原因是沒有定義空間(1,2,6...)，都還停留在Stack上，沒進Heap。
+        return memory[0];        //回傳"那個記憶體位置"的值。 (其實這招C也能用，事實上C就指標過去，數據回來而已，不用碰到Array)
+    }
+
+    // POKE 寫 RAM[address] = value
+    function void poke(int address, int value) {
+        var Array memory;
+        let memory = address;   //老樣子。 用矩陣指向記憶體位置。
+
+        let memory[0] = value;  //把那個記憶體位置，換成指定的值。
+
+        return;
+    }
+
+/////////////////////////////////////////////////////////////////////////////////
+    // 從 heap 配置 size 個 word，回傳配置到的 base（object/array 起點）
+    // 1. 先檢查 block 是否為 null，再訪問 block[length]
+    // 2. 檢查剩餘空間是否足夠創建新的 free block（必須 > 0）
+    // 3. 如果剩餘空間不足，直接分配整個 block
+    function Array alloc(int size) {
+
+        var Array block, prevBlock, nextBlock; //目前指向的Block,前一個block, 下一個Block
+        var int remainingSize;
+
+        let block = freeBlocks;                //把整個Freeblock矩陣，複製到Block中。(比較像是記憶體都指向同一個地方喇)
+        let prevBlock = 0;                     //初始化沒有前一個Block
+
+
+        // 找第一個長度足夠的 free block, 方法為"First Fit"
+        while (~(block = null)) {               //為甚麼Jack 沒有"!=" (=M=)。一定要繞這一圈，但基本上就是 while(block != null)。跑完每一個可行的bolck.
+            if (~(block[length] < size)) {      //如果，這個block >= 要求的Size，就決定是他了。
+
+                // 計算剩餘大小,Length 有效的代表著第0個位置。
+                //  如果還有剩就切割他。
+                let remainingSize = block[length] - size - 2;
+
+                if (remainingSize > 0) {
+                    // 把 block 分配一段出去，計算下一block的記憶體位置。
+                    let nextBlock = block + 2 + size;       //NextBlock = (現在這個Block的位置 +2 + size)。
+                    let nextBlock[length] = remainingSize;  //NextBlock[0] = 剩下的空間大小
+                    let nextBlock[next] = block[next];      //NextBlock[1] = block[1]。
+                                                            //因為[next]這個位置只有在身為FreeBlock時適用。新切割出來的FreeBlock必須要記得下一個Freeblock打哪找。
+                    
+                    // 當前 block 變成 allocated，length 設成 size。 next 清空(畢竟都使用中，得離開FreeChain)
+                    let block[length] = size;
+                    let block[next] = null;
+                    
+                    // 更新FreeList(更像是FreeChain喇) FreeBlocks 指向"第一個" 可用的空間。
+                    if (prevBlock = 0) {
+                        let freeBlocks = nextBlock;
+                    } else {
+                        let prevBlock[next] = nextBlock; //阿如果這是再鍊條中間，就要修改前一個FreeBlock的指向，指向這個新空間。
+                                                         //然後這個新空間指向下個新空間的邏輯，65行已經做了。
+                    }
+
+                } else {
+                    // 如果空間夠大，但切不開。就整碗給他。
+                    // 更新FreeBlocks。
+                    if (prevBlock = 0) {
+                        let freeBlocks = block[next];
+                    } else {
+                        let prevBlock[next] = block[next];
+                    }
+                    
+                    // block[length] 不用改變。 一樣去除NEXT。
+                    let block[next] = null;
+                }
+                
+                // 分配完成，把處理完的"這個Block"的資料區塊位置(+2)回傳給使用者。
+                return block + 2;
+            }
+            
+            // 推進一個Block,這個Block變成前一個，下個Block指向的位置變成現在的工作Block.
+            let prevBlock = block;
+            let block = block[next];
+        }
+        
+        // 阿要是整組找完了，就只能回傳-1。
+        return -1;
+    }
+    /////////////////////////////////////////////////////////////////////////////////
+    
+    //釋放 object（把它塞回 free list)。
+    function void deAlloc(Array object) {           //收到指定需要釋放的記憶體位置。
+        var Array block;                            //我們這單元完全在濫用Array能代表記憶體位置的特性。
+
+        // 現在要處理的記憶體位置 = 收到的 -2 (因為這樣才包含Next和Size)
+        let block = object - 2;
+
+        // 讓他回歸Freelist。 Size不用改，我們沒有Defrag,但是我們要改它的指向。
+        // 我們想要這東西出現在鍊條的"最前端"，所以要取代目前的freeBlock。
+        // 所以他的[next]是原本freeBlocks要去的地方。
+        // 然後再把freeBlock 指向目前這個區域，因為現在這邊是最前面了。
+
+        let block[next] = freeBlocks;
+        let freeBlocks = block;
+
+        return;
+    }
+}

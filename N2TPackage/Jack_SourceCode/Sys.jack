@@ -1,0 +1,47 @@
+class Sys {
+
+    // 呼叫所有初始化。
+    function void init() {
+        do Memory.init();
+        do Math.init();
+        do Screen.init();
+        do Keyboard.init();
+        do Output.init();
+        // String和Array 沒有初始化的函式。
+
+        //函式呼叫完，呼叫main.
+        do Main.main();
+
+        // 預防main跑完
+        do Sys.halt();
+        return;
+    }
+
+    // 甚麼都不做
+    function void halt() {
+        while (true) { }
+        return;
+    }
+
+    //給別人呼叫顯示錯誤瑪，並強制停下所有東西。
+    function void error(int errorCode) {
+        do Output.printString("ERROR: ");
+        do Output.printInt(errorCode);
+        do Output.println();
+        
+        do Sys.halt();
+        return;
+    }
+
+    //和halt不一樣，這個loop只是等待而已。
+    //就..一個單純等待的迴圈，能要求啥。
+
+    function void wait(int duration) {
+        var int i;
+        let i = duration;
+        while (i > 0) {
+            let i = i - 1;
+        }
+        return;
+    }
+}

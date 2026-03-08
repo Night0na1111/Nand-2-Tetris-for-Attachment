@@ -1,0 +1,59 @@
+class Main {
+    function void main() {
+        var Paddle paddle;
+        var Ball ball;
+        
+        var int key;
+        var boolean running;
+        var int score;
+        var int paddleY;
+        var int ballY, ballX, ballSize;
+        
+        let paddleY = 230;
+        let paddle = Paddle.new(230, paddleY, 50);
+        let ball = Ball.new(256, 128);
+        let running = true;
+        let score = 0;
+        
+        while (running) {
+            let key = Keyboard.keyPressed();
+            
+            if (key = 130) {
+                do paddle.paddleDirection(1);
+                do paddle.movePaddle();
+            }
+            
+            if (key = 132) {
+                do paddle.paddleDirection(2);
+                do paddle.movePaddle();
+            }
+            
+            if (key = 140) {
+                let running = false;
+            }
+            
+            do ball.moveBall();
+            
+            let ballY = ball.getY();
+            let ballX = ball.getX();
+            let ballSize = ball.getSize();
+            
+            if ((ballY + ballSize) > paddleY) { //高度到了之後
+                if((ballX + ballSize) > paddle.getLeft()){      //球在板子最左邊的右方 (+ballSize 好讓他更好碰到)
+                    if((ballX - ballSize) < paddle.getRight()){  //球在板子最右邊的左方(-ballSize 讓他更容易判斷在左邊)
+                        do ball.reverseY();
+                    let score = score + 1;
+                    do Output.moveCursor(0, 0);
+                    do Output.printString("Score: ");
+                    do Output.printInt(score);
+                    }
+                } 
+            } 
+            do Sys.wait(50);
+        }
+        
+        do ball.unLoad();
+        do paddle.unLoad();
+        return;
+    }
+}

@@ -1,0 +1,17 @@
+class Array {  //陣列
+
+     // 建立一個大小為 size 的陣列，回傳其 base address（Array 是 reference type） 
+    function Array new(int size) {
+        var int pointer;
+
+        let pointer = Memory.alloc(size); //主動要求一塊記憶體，指定大小。
+        return pointer;
+    }
+
+    // 釋放空見
+    method void dispose() {
+        do Memory.deAlloc(this);        //丟掉整個Object
+        return;
+    }
+
+}

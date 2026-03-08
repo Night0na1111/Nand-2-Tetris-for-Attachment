@@ -1,0 +1,120 @@
+class Ball{
+
+    field int x, y;  //球的位置
+    field int dx, dy; //球的速度
+    field int ballSize;
+
+
+    constructor Ball new(int startX, int startY) {
+        let x = startX;
+        let y = startY;
+        let ballSize = 2;
+        let dx = 2;      // Start moving right
+        let dy = -2;     // Start moving up
+        do showBall();
+
+        return this;
+    }
+
+    ///////////////////////////////////////////////////
+    method void draw(){     //畫球
+        do Screen.drawCircle(x,y,ballSize);
+
+        return;
+    }
+
+    //進行板子的畫與解畫
+    method void showBall(){
+        do Screen.setColor(true);
+        do draw();
+
+        return;
+    }
+
+    method void hideBall(){
+        do Screen.setColor(false);
+        do draw();
+
+        return;
+    }
+////////////////////////////////////////////////////////
+
+    method void unLoad(){    //記憶體清除
+         do Memory.deAlloc(this);
+         return;    //就算沒有回傳東西，還是要記得寫Return
+    }
+
+///////////////////////////////////////////////////////
+    //與四周邊界偵測，這東西要在重劃球之前進行檢查。
+    method void checkWallCollision() {
+    //左牆
+    if (x < (0 + ballSize)) {
+        let dx = -dx; //反轉跳躍~ 
+        let x = ballSize; 
+    }
+    
+    //右牆
+    if (x > (511 - ballSize)) {
+        let dx = -dx;
+        let x = 510 - ballSize;
+    }
+    
+    //上強
+    if ((y - ballSize) < 1) {
+        let dy = -dy;  // Reverse vertical direction
+        let y = ballSize;
+    }
+    
+    //下牆
+    if ((y + ballSize) > 253) {
+        // For now, just bounce (later: lose life)
+        let dy = -dy;
+        let y = 253 - ballSize;
+    }
+    
+    return;
+}
+
+    //讓球反彈
+    method void reverseY() {
+        let dy = -dy;
+        return;
+    }
+
+    ////////////回傳給Main的數值。
+    //Y軸判斷碰撞高度
+    method int getY() {
+        return y;
+    }
+
+    method int getX(){
+        return x;
+    }
+
+    //球的大小，避免穿摩(但不跟邊界依樣有必要性)
+    method int getSize() {
+        return ballSize;
+    }
+
+    //移動球
+    method void moveBall(){
+
+        do hideBall();
+
+        let x = x + dx;
+        let y = y + dy;
+
+        do checkWallCollision();
+        //這個要在位移【後】，不然檢查未移前有啥用
+        do showBall();
+
+        return;
+    }
+
+
+
+
+
+
+
+}

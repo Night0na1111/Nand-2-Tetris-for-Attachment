@@ -1,0 +1,175 @@
+function Ball.new 0
+push constant 5
+call Memory.alloc 1
+pop pointer 0
+push argument 0
+pop this 0
+push argument 1
+pop this 1
+push constant 2
+pop this 4
+push constant 2
+pop this 2
+push constant 2
+neg
+pop this 3
+push pointer 0
+call Ball.showBall 1
+pop temp 0
+push pointer 0
+return
+function Ball.draw 0
+push argument 0
+pop pointer 0
+push this 0
+push this 1
+push this 4
+call Screen.drawCircle 3
+pop temp 0
+push constant 0
+return
+function Ball.showBall 0
+push argument 0
+pop pointer 0
+push constant 0
+not
+call Screen.setColor 1
+pop temp 0
+push pointer 0
+call Ball.draw 1
+pop temp 0
+push constant 0
+return
+function Ball.hideBall 0
+push argument 0
+pop pointer 0
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push pointer 0
+call Ball.draw 1
+pop temp 0
+push constant 0
+return
+function Ball.unLoad 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Ball.checkWallCollision 0
+push argument 0
+pop pointer 0
+push this 0
+push constant 0
+push this 4
+add
+lt
+not
+if-goto IF_FALSE_0
+push this 2
+neg
+pop this 2
+push this 4
+pop this 0
+goto IF_END_1
+label IF_FALSE_0
+label IF_END_1
+push this 0
+push constant 511
+push this 4
+sub
+gt
+not
+if-goto IF_FALSE_2
+push this 2
+neg
+pop this 2
+push constant 510
+push this 4
+sub
+pop this 0
+goto IF_END_3
+label IF_FALSE_2
+label IF_END_3
+push this 1
+push this 4
+sub
+push constant 1
+lt
+not
+if-goto IF_FALSE_4
+push this 3
+neg
+pop this 3
+push this 4
+pop this 1
+goto IF_END_5
+label IF_FALSE_4
+label IF_END_5
+push this 1
+push this 4
+add
+push constant 253
+gt
+not
+if-goto IF_FALSE_6
+push this 3
+neg
+pop this 3
+push constant 253
+push this 4
+sub
+pop this 1
+goto IF_END_7
+label IF_FALSE_6
+label IF_END_7
+push constant 0
+return
+function Ball.reverseY 0
+push argument 0
+pop pointer 0
+push this 3
+neg
+pop this 3
+push constant 0
+return
+function Ball.getY 0
+push argument 0
+pop pointer 0
+push this 1
+return
+function Ball.getX 0
+push argument 0
+pop pointer 0
+push this 0
+return
+function Ball.getSize 0
+push argument 0
+pop pointer 0
+push this 4
+return
+function Ball.moveBall 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Ball.hideBall 1
+pop temp 0
+push this 0
+push this 2
+add
+pop this 0
+push this 1
+push this 3
+add
+pop this 1
+push pointer 0
+call Ball.checkWallCollision 1
+pop temp 0
+push pointer 0
+call Ball.showBall 1
+pop temp 0
+push constant 0
+return
