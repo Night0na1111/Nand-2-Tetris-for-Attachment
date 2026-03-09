@@ -10,6 +10,9 @@ git pull
 git add .     
 :掃描整個資料夾。
 
+git status
+確認add的掃瞄解果。
+
 git commit -m "你想要的訊息"
 :把掃描到的東西包裝好，可以附上訊息。
 
