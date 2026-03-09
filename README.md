@@ -7,7 +7,7 @@ git pull
 :把REPO上的東西拉下來。
 
 
-git add.     
+git add .     
 :掃描整個資料夾。
 
 git commit -m "你想要的訊息"
