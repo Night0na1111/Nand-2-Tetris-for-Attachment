@@ -6,6 +6,8 @@ git init
 git pull     
 :把REPO上的東西拉下來。
 
+git checkout .
+把所有被刪掉的檔案從最後一次 commit 還原回來。
 
 git add .     
 :掃描整個資料夾。
