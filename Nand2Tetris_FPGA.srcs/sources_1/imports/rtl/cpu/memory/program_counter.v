@@ -1,20 +1,23 @@
-module program_counter(output [15:0] out,
-                       input clk,
-                       input [15:0] in_value,
-                       input wire load,
-                       input wire reset,
-                       input wire increment);
-    reg [15:0] counter;
+module program_counter(
+output [15:0] out,
+input clk,
+input [15:0] in_value,
+input wire load,
+input wire reset,
+input wire increment
+);
 
-    always @(posedge(clk)) begin
-        if (reset) begin
-            counter <= 0;
-        end else if (load) begin
-            counter <= #1 in_value;
-        end else if (increment) begin
-            counter <= #1 counter + 1;
-        end
-    end
+reg [15:0] counter;
 
-    assign out = counter;
+always @(posedge clk) begin
+if (reset)
+counter <= 0;
+else if (load)
+counter <= in_value;
+else if (increment)
+counter <= counter + 1;
+end
+
+assign out = counter;
+
 endmodule
