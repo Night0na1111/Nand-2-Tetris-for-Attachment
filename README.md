@@ -42,4 +42,5 @@ vivado -mode gui -source Nand2Tetris_FPGA.tcl
 在Project中要新增檔案時，記得指定路徑到"Nand2Tetris_FPGA.srcs/sources_1/imports/rtl"這個資料夾才對。
 
 新增到預設路徑"不會"被包入TCL中，離不開你的電腦。
+
 ===============================================
