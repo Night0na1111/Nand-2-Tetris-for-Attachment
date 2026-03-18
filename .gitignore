@@ -9,4 +9,5 @@
 *.log
 *.str
 *.xpr  
+*.dmp  
 *.Nand2Tetris_FPGA/

@@ -1,6 +1,9 @@
+// 26/3/16 Fixed (f & no) ordering issue.
+
 module alu(output [15:0] out,
            output wire zr,
            output wire ng,
+           
            input [15:0] x,
            input [15:0] y,
            input wire zx,
@@ -9,6 +12,7 @@ module alu(output [15:0] out,
            input wire ny,
            input wire f,
            input wire no);
+           
     reg signed[15:0] result;
 
     reg zero_flag;
@@ -42,15 +46,16 @@ module alu(output [15:0] out,
 
         and_result = x_actual & y_actual;
         sum_result = x_actual + y_actual;
-        if (no) begin
-            and_result = ~and_result;
-            sum_result = ~sum_result;
-        end
-
+        
+        //POST PROCESSING
         if (f) begin
             result = sum_result;
         end else begin
             result = and_result;
+        end
+        
+        if (no) begin
+            result = ~result;
         end
 
         if (result == 0) begin
