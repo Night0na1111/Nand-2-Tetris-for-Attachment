@@ -38,8 +38,6 @@ module vga_initials(
     /* pixel extraction */
     always @(*) begin
         bit_x = x[3:0];
-        // ★ 修正 2：改為 LSB-first，符合 Hack 平台 screen memory 規格
-        // 原本 M[15 - bit_x] 是 MSB-first，導致每個 word 內像素水平鏡像
         pixel = M[bit_x];
     end
 
