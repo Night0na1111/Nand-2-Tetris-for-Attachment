@@ -7,7 +7,7 @@ class Screen {
     function void init() {
         var int i, mask;
         
-        let base = 16384;   //螢幕的期使座標在 16384
+        let base = 16384;   //螢幕的起始座標在 16384
         let color = true;
         
         //值接照般加法的Table。 Mother F.... N2t的官方編譯器不接受32768這個值。 不是因為它不能被執行，是Compiler會拒絕他。
@@ -44,7 +44,7 @@ class Screen {
 
 
     //清空螢幕，比較像是用雪白複寫一切。
-    //螢幕需要 512 × 256 bit, 然後每一個記憶體位置可以存16Bit, 所以，/16 = 8192
+    //螢幕需要 512 × 256 bit, 然後每一個記憶體位置可以存16Bit, 所以/16 = 8192
     function void clearScreen() {
         var int i;
 
@@ -316,7 +316,7 @@ class Screen {
         return;
     }
 
-    //畫一個元
+    //畫一個圓
     function void drawCircle(int cx, int cy, int r) {
         var int dx, dy, rSquared;
         
@@ -327,7 +327,7 @@ class Screen {
         let rSquared = r * r;
         let dy = r;
         
-        while (~(dy < 0)) {     //這公式太複雜@@，直接般書中的。 爆掉的話請回去參考書。
+        while (~(dy < 0)) {     //這公式太複雜@@，直接搬書中的。 爆掉的話請回去參考書。
             let dx = Math.sqrt(rSquared - (dy * dy));
             do Screen.drawLine(cx - dx, cy - dy, cx + dx, cy - dy);
             do Screen.drawLine(cx - dx, cy + dy, cx + dx, cy + dy);

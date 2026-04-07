@@ -31,8 +31,7 @@ vivado -mode gui -source Nand2Tetris_FPGA.tcl
 
 如何產生TCL 檔案:
 1. File -> Project -> Write TCL
-2. 
-3. 確保Output file的路徑是到「你第一時間下載Git專案的那個資料夾」
+2. 確保Output file的路徑是到「你第一時間下載Git專案的那個資料夾」
 ，不要在「Nand2Tetris_FPGA」這個資料夾內(會被Git忽略掉)。
 
 3.取消勾選【Copy sources to new project】。

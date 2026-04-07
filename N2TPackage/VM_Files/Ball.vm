@@ -63,7 +63,7 @@ function Ball.checkWallCollision 0
 push argument 0
 pop pointer 0
 push this 0
-push constant 0
+push constant 4
 push this 4
 add
 lt
@@ -73,12 +73,14 @@ push this 2
 neg
 pop this 2
 push this 4
+push constant 4
+add
 pop this 0
 goto IF_END_1
 label IF_FALSE_0
 label IF_END_1
 push this 0
-push constant 511
+push constant 507
 push this 4
 sub
 gt
@@ -87,7 +89,7 @@ if-goto IF_FALSE_2
 push this 2
 neg
 pop this 2
-push constant 510
+push constant 507
 push this 4
 sub
 pop this 0
@@ -97,7 +99,7 @@ label IF_END_3
 push this 1
 push this 4
 sub
-push constant 1
+push constant 4
 lt
 not
 if-goto IF_FALSE_4
@@ -105,6 +107,8 @@ push this 3
 neg
 pop this 3
 push this 4
+push constant 4
+add
 pop this 1
 goto IF_END_5
 label IF_FALSE_4
@@ -112,14 +116,14 @@ label IF_END_5
 push this 1
 push this 4
 add
-push constant 253
+push constant 249
 gt
 not
 if-goto IF_FALSE_6
 push this 3
 neg
 pop this 3
-push constant 253
+push constant 249
 push this 4
 sub
 pop this 1

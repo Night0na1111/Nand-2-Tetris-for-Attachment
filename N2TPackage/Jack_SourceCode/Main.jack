@@ -1,4 +1,7 @@
 class Main {
+    // We got about 1000 lines (machine language) left.
+    // Feel free to add more stuff into this, just keep it compact.
+
     function void main() {
         var Paddle paddle;
         var Ball ball;
@@ -15,6 +18,11 @@ class Main {
         let running = true;
         let score = 0;
         
+        //Top marker Line
+        do Screen.drawRectangle(0, 0, 512, 3);     //top border
+        do Screen.drawRectangle(509, 0, 512, 255); //right border
+        do Screen.drawRectangle(0, 0, 3, 255);     //left border
+
         while (running) {
             let key = Keyboard.keyPressed();
             
@@ -32,6 +40,13 @@ class Main {
                 let running = false;
             }
             
+            //re-draw the score.
+            //For the love of god, this draw call is so slow.
+            //Only enable this if you are going with hardware, not emulation.
+            // do Output.moveCursor(0, 0);
+            // do Output.printString("Score: ");
+            // do Output.printInt(score);
+
             do ball.moveBall();
             
             let ballY = ball.getY();

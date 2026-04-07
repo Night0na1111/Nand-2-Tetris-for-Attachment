@@ -6,7 +6,7 @@ class Memory {
     //初始化 heap 的 free list
     //freeList邏輯。 第一個空間[0]會儲存說"這東西有多長"，第二個空間[1]會指向下一個能用的Free空間。 接下來就是存資料。
     function void init() {
-        let heapBase = 2048;   //heal 打 RAM[2048] 開始。
+        let heapBase = 2048;   //heap 打 RAM[2048] 開始。
         let length = 0;
         let next = 1;
 

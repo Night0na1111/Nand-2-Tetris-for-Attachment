@@ -15,6 +15,24 @@ not
 pop local 3
 push constant 0
 pop local 4
+push constant 0
+push constant 0
+push constant 512
+push constant 3
+call Screen.drawRectangle 4
+pop temp 0
+push constant 509
+push constant 0
+push constant 512
+push constant 255
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+push constant 0
+push constant 3
+push constant 255
+call Screen.drawRectangle 4
+pop temp 0
 label WHILE_LOOP_0
 push local 3
 not

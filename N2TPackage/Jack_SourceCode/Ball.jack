@@ -48,28 +48,28 @@ class Ball{
     //與四周邊界偵測，這東西要在重劃球之前進行檢查。
     method void checkWallCollision() {
     //左牆
-    if (x < (0 + ballSize)) {
+    if (x  < (4 + ballSize)) {
         let dx = -dx; //反轉跳躍~ 
-        let x = ballSize; 
+        let x = ballSize + 4; 
     }
     
     //右牆
-    if (x > (511 - ballSize)) {
+    if (x > (507 - ballSize)) {
         let dx = -dx;
-        let x = 510 - ballSize;
+        let x = 507 - ballSize;
     }
     
     //上強
-    if ((y - ballSize) < 1) {
+    if ((y - ballSize) < 4) {
         let dy = -dy;  // Reverse vertical direction
-        let y = ballSize;
+        let y = ballSize + 4;  //這邊+4, 因為有上牆。沒有給+4的話她會不停觸發彈跳。
     }
     
     //下牆
-    if ((y + ballSize) > 253) {
+    if ((y + ballSize) > 249) {
         // For now, just bounce (later: lose life)
         let dy = -dy;
-        let y = 253 - ballSize;
+        let y = 249 - ballSize;
     }
     
     return;
