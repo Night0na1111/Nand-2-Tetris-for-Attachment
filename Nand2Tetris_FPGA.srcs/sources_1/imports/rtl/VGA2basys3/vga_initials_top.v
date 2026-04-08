@@ -14,11 +14,16 @@ module vga_initials_top(
     output [12:0] memory_address
 );
 
+    // ✅ 修改：clk25 改為 FF 輸出，讓 Vivado 可正確推斷 generated clock
     reg [1:0] div;
     always @(posedge mclk)
         div <= div + 1;
 
-    wire clk25 = div[1];
+    reg clk25_reg;
+    always @(posedge mclk)
+        clk25_reg <= div[1];
+
+    wire clk25 = clk25_reg;
 
     wire [9:0] hc;
     wire [9:0] vc;

@@ -13,8 +13,8 @@ module vga_initials(
 );
 
 
-    parameter HSTART = 0;    // 控制畫面左右位置大右小左+-8
-    parameter VSTART = 184;   // 控制畫面上下位置大下小上+-8
+    parameter HSTART = 64;    // 控制畫面左右位置大右小左+-8(目前可用64or0)
+    parameter VSTART = 112;   // 控制畫面上下位置大下小上+-8(目前可用112or184)
 
     reg [9:0] x;
     reg [8:0] y;

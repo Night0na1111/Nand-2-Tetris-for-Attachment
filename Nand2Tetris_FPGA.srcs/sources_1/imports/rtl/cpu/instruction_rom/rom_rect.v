@@ -9,7 +9,7 @@ module rom_rect(
     reg [15:0] rom [0:32767];
 
     initial begin
-        $readmemb("C:/Users/wunai/Desktop/project/N2TPackage/PongHomeMade2.txt", rom); 
+        $readmemb("C:/Users/wunai/Desktop/project/N2TPackage/PongHomeMade2.mem", rom); 
     end
 
     always @(posedge clk) begin
