@@ -1,10 +1,16 @@
 `timescale 1ns / 1ps
 
 module vga_initials(
+    input wire        clk,
     input wire        vidon,
     input wire [9:0]  hc,
     input wire [9:0]  vc,
     input wire [15:0] M,
+
+    input wire        btn_left, 
+    input wire        btn_right, 
+    input wire        btn_up, 
+    input wire        btn_down,
 
     output reg [12:0] rom_addr,
     output reg [3:0]  red,
@@ -12,10 +18,52 @@ module vga_initials(
     output reg [3:0]  blue
 );
 
+    reg [9:0] HSTART = 10'd64;
+    reg [9:0] VSTART = 10'd112;
 
-    parameter HSTART = 64;    // 控制畫面左右位置大右小左+-8(目前可用64or0)
-    parameter VSTART = 112;   // 控制畫面上下位置大下小上+-8(目前可用112or184)
+    // ============================================
+    // 按鈕防彈跳 + one-shot
+    // ============================================
+    reg [19:0] debounce_l, debounce_r, debounce_u, debounce_d;
+    reg btn_l_clean, btn_r_clean, btn_u_clean, btn_d_clean;
+    reg btn_l_prev,  btn_r_prev,  btn_u_prev,  btn_d_prev;
 
+    always @(posedge clk) begin
+        debounce_l <= {debounce_l[18:0], btn_left};
+        debounce_r <= {debounce_r[18:0], btn_right};
+        debounce_u <= {debounce_u[18:0], btn_up};
+        debounce_d <= {debounce_d[18:0], btn_down};
+
+        btn_l_clean <= (&debounce_l);
+        btn_r_clean <= (&debounce_r);
+        btn_u_clean <= (&debounce_u);
+        btn_d_clean <= (&debounce_d);
+
+        btn_l_prev <= btn_l_clean;
+        btn_r_prev <= btn_r_clean;
+        btn_u_prev <= btn_u_clean;
+        btn_d_prev <= btn_d_clean;
+    end
+
+    // 只在按下瞬間觸發一次
+    wire trig_left  = btn_l_clean && !btn_l_prev;
+    wire trig_right = btn_r_clean && !btn_r_prev;
+    wire trig_up    = btn_u_clean && !btn_u_prev;
+    wire trig_down  = btn_d_clean && !btn_d_prev;
+
+    // ============================================
+    // HSTART / VSTART 更新
+    // ============================================
+    always @(posedge clk) begin
+        if (trig_left  && HSTART >= 10'd8)           HSTART <= HSTART - 10'd4;
+        if (trig_right && HSTART <= 10'd640 - 10'd8) HSTART <= HSTART + 10'd4;
+        if (trig_up    && VSTART >= 10'd8)           VSTART <= VSTART - 10'd4;
+        if (trig_down  && VSTART <= 10'd480 - 10'd8) VSTART <= VSTART + 10'd4;
+    end
+
+    // ============================================
+    // 以下和原版相同
+    // ============================================
     reg [9:0] x;
     reg [8:0] y;
     reg       visible;
@@ -25,30 +73,25 @@ module vga_initials(
     always @(*) begin
         visible = (hc >= HSTART) && (hc < HSTART + 512) &&
                   (vc >= VSTART) && (vc < VSTART + 256);
-
         x = hc - HSTART;
         y = vc - VSTART;
     end
 
-    /* address generation */
     always @(*) begin
         rom_addr = (y << 5) + (x >> 4);
     end
 
-    /* pixel extraction */
     always @(*) begin
         bit_x = x[3:0];
         pixel = M[bit_x];
     end
 
-    /* color output */
     always @(*) begin
         if (vidon && visible && pixel) begin
             red   = 4'hF;
             green = 4'hF;
             blue  = 4'hF;
-        end
-        else begin
+        end else begin
             red   = 4'h0;
             green = 4'h0;
             blue  = 4'h0;

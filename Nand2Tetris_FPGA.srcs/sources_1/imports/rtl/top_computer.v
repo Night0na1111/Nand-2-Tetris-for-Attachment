@@ -14,7 +14,12 @@ module top_computer(
     output [3:0] Green,
 
     input wire PS2C,
-    input wire PS2D
+    input wire PS2D,
+    
+    input wire btn_up,   
+    input wire btn_right, 
+    input wire btn_down,  
+    input wire btn_left   
 );
 
     //=========================================================
@@ -40,6 +45,10 @@ module top_computer(
         .clr(reset),
         .memory_data(vga_memory_in),
         .memory_address(vga_memory_addr),
+        .btn_up(btn_up),       
+        .btn_right(btn_right), 
+        .btn_down(btn_down),   
+        .btn_left(btn_left),   
         .hsync(HSync),
         .vsync(VSync),
         .blue(Blue),

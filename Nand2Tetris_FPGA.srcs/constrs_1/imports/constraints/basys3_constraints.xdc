@@ -61,3 +61,15 @@ set_property IOSTANDARD LVCMOS33 [get_ports PS2C]
 set_property IOSTANDARD LVCMOS33 [get_ports PS2D]
 set_property PULLUP true [get_ports PS2C]
 set_property PULLUP true [get_ports PS2D]
+
+
+# 螢幕位置方向鍵
+set_property PACKAGE_PIN W19 [get_ports btn_left]
+set_property PACKAGE_PIN T17 [get_ports btn_right]
+set_property PACKAGE_PIN T18 [get_ports btn_up]
+set_property PACKAGE_PIN U17 [get_ports btn_down]
+
+set_property IOSTANDARD LVCMOS33 [get_ports btn_left]
+set_property IOSTANDARD LVCMOS33 [get_ports btn_right]
+set_property IOSTANDARD LVCMOS33 [get_ports btn_up]
+set_property IOSTANDARD LVCMOS33 [get_ports btn_down]

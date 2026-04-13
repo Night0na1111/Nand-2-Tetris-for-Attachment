@@ -4,6 +4,11 @@ module vga_initials_top(
     input mclk,
     input clr,
     input [15:0] memory_data,
+    
+    input  wire        btn_up,     
+    input  wire        btn_right, 
+    input  wire        btn_down,   
+    input  wire        btn_left,  
 
     output hsync,
     output vsync,
@@ -14,7 +19,7 @@ module vga_initials_top(
     output [12:0] memory_address
 );
 
-    // ✅ 修改：clk25 改為 FF 輸出，讓 Vivado 可正確推斷 generated clock
+    
     reg [1:0] div;
     always @(posedge mclk)
         div <= div + 1;
@@ -40,14 +45,19 @@ module vga_initials_top(
     );
 
     vga_initials renderer(
-        .vidon(vidon),
-        .hc(hc),
-        .vc(vc),
-        .M(memory_data),
-        .rom_addr(memory_address),
-        .red(red),
-        .green(green),
-        .blue(blue)
-    );
+            .clk(mclk),          
+            .vidon(vidon),
+            .hc(hc),
+            .vc(vc),
+            .M(memory_data),
+            .btn_up(btn_up),     
+            .btn_right(btn_right),
+            .btn_down(btn_down),  
+            .btn_left(btn_left),  
+            .rom_addr(memory_address),
+            .red(red),
+            .green(green),
+            .blue(blue)
+        );
 
 endmodule
