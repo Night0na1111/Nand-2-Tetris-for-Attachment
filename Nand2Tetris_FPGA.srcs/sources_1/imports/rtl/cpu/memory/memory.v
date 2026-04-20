@@ -3,6 +3,7 @@
 module memory(
     // Port A: CPU 讀寫
     input             clk,
+    input             reset,          // ← 新增
     input      [14:0] address,
     output reg [15:0] out,
     input      [15:0] in_value,
@@ -16,7 +17,7 @@ module memory(
 );
 
     (* ram_style = "block" *)
-    reg [15:0] mem [0:24575]; // Screen 結束在 24575，24576 是鍵盤暫存器
+    reg [15:0] mem [0:24575];
 
     integer i;
     initial begin
@@ -25,9 +26,10 @@ module memory(
     end
 
     reg [15:0] bram_out;
-    reg [14:0] addr_reg; // 對齊 BRAM 1-clock 延遲
+    reg [14:0] addr_reg;//對齊bram延遲
 
-    // Port A
+    // Port A - 寫入路徑的 address/in_value/load 完全由外部控制
+    // reset 期間由 top 層的 FSM 送入清零地址與資料
     always @(posedge clk) begin
         addr_reg <= address;
         if (load && address < 15'd24576)
@@ -35,9 +37,11 @@ module memory(
         bram_out <= mem[address];
     end
 
-    // 讀取多工：addr_reg 對齊 bram_out 的時間
+    // 讀取多工
     always @(*) begin
-        if (addr_reg == 15'd24576)
+        if (reset)
+            out = 16'b0;            // 清零期間強制輸出 0，避免 CPU 讀到垃圾
+        else if (addr_reg == 15'd24576)
             out = kbd_current_key;
         else
             out = bram_out;
