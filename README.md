@@ -10,7 +10,10 @@ git checkout .
 把所有被刪掉的檔案從最後一次 commit 還原回來。
 
 git add .     
-:掃描整個資料夾。
+:掃描整個資料夾。(只能用在新增檔案)
+
+git add -A
+:掃描全部改變(包括刪除)
 
 git status
 確認add的掃瞄解果。
