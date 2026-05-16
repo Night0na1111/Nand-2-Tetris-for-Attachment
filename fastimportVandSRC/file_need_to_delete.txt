@@ -1,0 +1,2 @@
+cpu/memory/ram16k_tdp
+VGA2basys3/clkdiv
