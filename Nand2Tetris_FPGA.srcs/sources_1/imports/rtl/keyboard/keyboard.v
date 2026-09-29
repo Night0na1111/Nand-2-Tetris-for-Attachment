@@ -1,61 +1,81 @@
 `timescale 1ns / 1ps
 
 module keyboard(
-    input  wire        clk25,
-    input  wire        clr,
-    input  wire        PS2C,
-    input  wire        PS2D,
-    output reg  [15:0] current_key
+    input  wire        clk25,   //25MHZ clock
+    input  wire        clr,     //Clear/Reset
+    input  wire        PS2C,    //PS2 Clock  (10k or 16.7k)
+    input  wire        PS2D,    //PS2 Data
+
+    output reg  [15:0] current_key  //ASCII to COMPUTER
 );
 
-//  PS2 Filter
+
+////////////////////////////////////////////////////////////////
+//  PS2 Filter (Debouncing)
+//  We can filter PS2C & D because it is at best 16.7kHZ, very slow. Slow enough that we can trow a fast debounce onto it and don't effect timing.
+//  PS2Cf and PS2Df are still individual bits (Sequential), just filtered.
 reg [7:0] ps2c_filter, ps2d_filter;
 reg PS2Cf, PS2Df;
 
 always @(posedge clk25 or posedge clr) begin
-    if (clr) begin
-        ps2c_filter <= 8'hFF;
+    if (clr) begin //Reset
+        ps2c_filter <= 8'hFF; //The 8 bit history buffer, fills up after 8 clk25 cycle.
         ps2d_filter <= 8'hFF;
         PS2Cf       <= 1;
         PS2Df       <= 1;
+
     end else begin
-        ps2c_filter <= {ps2c_filter[6:0], PS2C};
-        ps2d_filter <= {ps2d_filter[6:0], PS2D};
 
-        if      (ps2c_filter == 8'hFF) PS2Cf <= 1;
-        else if (ps2c_filter == 8'h00) PS2Cf <= 0;
+        ps2c_filter <= {ps2c_filter[6:0], PS2C}; //take only bit 0 to 6, and pad on 1 bit. Shifting the entire thing left by one.
+        ps2d_filter <= {ps2d_filter[6:0], PS2D}; //Same Shifting.
 
-        if      (ps2d_filter == 8'hFF) PS2Df <= 1;
-        else if (ps2d_filter == 8'h00) PS2Df <= 0;
+        if      (ps2c_filter == 8'hFF) PS2Cf <= 1; //Steady 1
+        else if (ps2c_filter == 8'h00) PS2Cf <= 0; //Steady 0
+
+        if      (ps2d_filter == 8'hFF) PS2Df <= 1; //Steady 1
+        else if (ps2d_filter == 8'h00) PS2Df <= 0; //Steady 0
     end
 end
 
-// detect PS2Cf fall
+
+
+//////////////////////////////////////////////////////////////
+// detect PS2Cf fall (Because PS2 operates on Falling edges.) 1 to 0
+
 reg PS2Cf_prev;
-always @(posedge clk25 or posedge clr) begin
+always @(posedge clk25 or posedge clr) begin   //constantly refresh prev state.
     if (clr) PS2Cf_prev <= 1;
     else     PS2Cf_prev <= PS2Cf;
 end
-wire ps2c_fall = (PS2Cf_prev == 1 && PS2Cf == 0);
+wire ps2c_fall = (PS2Cf_prev == 1 && PS2Cf == 0);  //If prev is 1 and now is 0, trigger ps2c_fall. Signal only lives for one 25Mhz cycle.
 
-// read 11-bit Frame
-reg [3:0]  bit_cnt;
-reg [10:0] shift_reg;
-reg        rx_done;
+
+
+///////////////////////////////////////////////////////////////
+// read 11-bit Frame (Frame processing)
+// By the way, we actually never use ANY of the built-in error correction bits.
+// We only count the frame via clock cycles, not packet integrity. If this thing ever desynced or gets garbeled, we will be off-frame.
+
+reg [3:0]  bit_cnt;   //Counts input
+reg [10:0] shift_reg; //The Shift register,11 bit total.
+reg        rx_done;   //Signals When the Shift Register is full.
 
 always @(posedge clk25 or posedge clr) begin
     if (clr) begin
-        bit_cnt   <= 0;
-        shift_reg <= 0;
+        bit_cnt   <= 0; 
+        shift_reg <= 0; 
         rx_done   <= 0;
+
     end else begin
-        rx_done <= 0;
-        if (ps2c_fall) begin
-            shift_reg <= {PS2Df, shift_reg[10:1]};
-            if (bit_cnt == 4'd10) begin
+
+        rx_done <= 0;                               //Resets the Frame complete signal, so that it only lives 1 25MHZ cycle too.
+        if (ps2c_fall) begin                        //Operates whenever Negedge(Ps2)
+            shift_reg <= {PS2Df, shift_reg[10:1]};  //Replace The leftmost bit with new data, and push all else left.
+            if (bit_cnt == 4'd10) begin             //If the frame is done, reset and signal frame complete.
                 bit_cnt <= 0;
                 rx_done <= 1;
             end else begin
+
                 bit_cnt <= bit_cnt + 1;
             end
         end
@@ -63,8 +83,14 @@ always @(posedge clk25 or posedge clr) begin
 end
 
 
+
+//////////////////////////////////////////////////////////
 //Scan Code → Hack Key Code(ASCII)
-function [15:0] scancode_to_hack;
+//We skipped the entire lower case rendering in software, no way we are ASKING for it here. (Rant)
+//Fine, now the memory map of lower case letters are direct duplicates of Captial letters in software.
+//This have the side effect of... not requireing shift key or Caps lock!
+
+function [15:0] scancode_to_hack; //Basically a look up table. Gets called, get a value, give an output value. Basically a giant MUX.
     input [7:0] sc;
     begin
         case (sc)
@@ -142,23 +168,32 @@ function [15:0] scancode_to_hack;
 endfunction
 
 
-// Make / Break fsm
 
+///////////////////////////////////////////////////////////////////////////
+// Make / Break Code FSM.
+// So when Ps2 want to send keystrokes, it have 2 parts.
+// The makecode is what the PS2 code for that key is, it will repeat as long as the key is held.
+// The Break Code is when you let go of the key, it will send out 0xF0, and the PS2 code for the key that was let go of.
+// THis module determins what to do with the incoming packets.
 reg is_break;
 
 always @(posedge clk25 or posedge clr) begin
     if (clr) begin
         current_key <= 16'd0;
         is_break    <= 1'b0;
-    end else if (rx_done) begin
-        if (shift_reg[8:1] == 8'hF0) begin
+
+    end else if (rx_done) begin              //When Packet is done receiving.
+
+        if (shift_reg[8:1] == 8'hF0) begin   //If the packet is 0xF0, it signals a key release. Next input should be a "release".
             is_break <= 1'b1;        
         end else begin
-            if (is_break) begin
+
+            if (is_break) begin              //If the last packet is break code, we clear the key buffer and reset the flag this cycle.
                 current_key <= 16'd0;   
-                is_break    <= 1'b0;
+                is_break    <= 1'b0;         //KEYS ARE EXPECTED TO NOT INPUT WHEN UNPRESSED.
             end else begin
-                current_key <= scancode_to_hack(shift_reg[8:1]); 
+
+                current_key <= scancode_to_hack(shift_reg[8:1]);   //Finally we get to have a single output. After ALL THAT decoding.
             end
         end
     end

@@ -18,6 +18,7 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
+//This file is just a dummy file for testing VGA. Taking the form of a ROM File.
 module prom_DMH(
     input wire [12:0] addr,
     output wire [0:15] M

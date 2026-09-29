@@ -10,4 +10,5 @@
 *.str
 *.xpr  
 *.dmp  
-*.Nand2Tetris_FPGA/
+*.Nand2Tetris_FPGA
+dfx_runtime.txt

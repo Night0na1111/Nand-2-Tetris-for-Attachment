@@ -1,0 +1,157 @@
+class Math {
+
+static Array twoToThe;
+//宣告一個快速查找表 方便未來運算
+
+//初始化 建立查找表，這邊的每一個值，都代表其中一個位元是1。
+function void init(){
+    let twoToThe = Array.new(15);
+
+    let twoToThe[0] = 1; //0001
+    let twoToThe[1] = 2; //0010
+    let twoToThe[2] = 4; //0100
+    let twoToThe[3] = 8; //1000
+    let twoToThe[4] = 16;
+    let twoToThe[5] = 32;
+    let twoToThe[6] = 64;
+    let twoToThe[7] = 128;
+    let twoToThe[8] = 256;
+    let twoToThe[9] = 512;
+    let twoToThe[10] = 1024;
+    let twoToThe[11] = 2048;
+    let twoToThe[12] = 4096;
+    let twoToThe[13] = 8192;
+    let twoToThe[14] = 16384;
+    
+    return;
+}
+
+//絕對值 謝天謝地位元翻轉是編譯器的工作，這邊只需要加負號。
+function int abs(int x){
+    if (x < 0){
+        return -x;
+    }
+    return x;
+}
+
+//乘法 (Shift and Add 算法，其實很像手寫的二進位乘法，只是這邊用程式表示而已)
+//我們 Bitwise 的& 還是能用。
+function int multiply(int x, int y){
+    var int sum, shiftedX, i;
+
+    let sum = 0;
+    let shiftedX = x; 
+    let i = 0;
+
+     while (i < 15) {
+        //檢查乘數y現在這個位元是0還是1。
+        //AND的結果如果 != 0, 那就代表那一位有東西。 要執行if()中的加法。
+        //然後這邊要做反轉的原因是，AND出來的結果可能是1以上的數值，你會灌爆記憶體。
+        //我們是從0開始計數，對照位元表時不要看錯。
+        //負數不用管，因為書中說二的補數會正確運算。
+
+        if (~((y & twoToThe[i]) = 0)) {
+            let sum = sum + shiftedX;
+        }
+        
+        //無論如何都左移，換下一位
+        let shiftedX = shiftedX + shiftedX;
+        let i = i + 1;
+    }
+    
+    return sum;
+}
+
+//除法
+function int divide(int x, int y){
+     var int q, inX, inY, doubleY;
+     var boolean isNegative;
+
+    //確保分母 != 0
+    if (y = 0) { 
+        return 0; 
+    }
+
+    //追蹤是否要正負號，因為除法計算一律用絕對值。
+    //所以這裡先算出正負，存起來，最後再給回去。
+    let isNegative = ((x < 0) & (y > 0)) | ((x > 0) & (y < 0));
+
+    //絕對值
+    let inX = Math.abs(x);
+    let inY = Math.abs(y);
+
+    ////////////////////////////////計算區域，確認X是否能被廚(餘)Wwwww
+    if (inX < inY) { 
+        return 0; 
+    }
+
+    //雙倍Y
+    let doubleY = inY + inY;
+
+    //這邊檢查兩個東西，一個是溢出。
+    //如果doubleY > inX 那就代表我們Hit base case，不用再跑一崙了。
+    //inY 其實代表著「這一輪的結果」， doubleY代表「下一輪的值」。
+    if ((doubleY < 0) | (doubleY > inX)) {
+        if (isNegative) {
+            return -1;
+        }
+        return 1;
+    }
+
+    //如果發現還能下一輪，就遞迴呼叫自己。
+    let q = Math.divide(inX, doubleY);
+
+    //////////////////////////////// 結果計算區域。
+    //你要是還記得遞迴怎做，最底層的會回傳回來，到這邊被計算，然後再去更上層。
+    if ((inX - (2 * q * inY)) < inY) {
+        let q = 2 * q;
+    } else {
+        let q = (2 * q) + 1;
+    }
+
+    //把正負號家回去。 如果有更上層，就會去更上層。
+    if (isNegative) {
+        return -q;
+    }
+    return q;
+}
+
+//最小值 就只是兩個比大小
+function int min(int x, int y){
+    if (x < y) {
+        return x;
+    }
+    return y;
+}
+
+//最大值
+function int max(int x, int y){
+    if (x > y) {
+        return x;
+    }
+    return y;
+}
+
+//開根號
+function int sqrt(int x){
+    var int y, j, temp, tempSquared;
+    
+    let y = 0;  //累績的次方值
+    let j = 7;  //最大位元，因為二的補述，遞8位元會是正負標記。
+    
+    while (~(j < 0)) {  //一路從7次方找下去。
+        // 這兩行是為了確定是否有餘數，(前一輪累計的+目前的是方值)^2, 然後跟x比大小。
+        let temp = y + twoToThe[j];  
+        let tempSquared = temp * temp;
+        
+        if (~(tempSquared > x) & (tempSquared > 0)) {  // >0 檢查溢出
+            let y = temp;
+        }
+        
+        let j = j - 1;
+    }
+    
+    return y;
+}
+
+}

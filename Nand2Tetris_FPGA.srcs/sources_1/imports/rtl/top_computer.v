@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module top_computer(
-    input clk_board_100M,
+    input clk_board_100M,      
     input reset,
 
     output [7:0] led_7seg,
@@ -23,7 +23,9 @@ module top_computer(
 );
 
 
-    // clr ram FSM
+    // Memory reset routine.
+    // In memory.v, we only zero out on first flash. This memory wipe run on reset, and before the rest of CPU(thus not creating problems).
+    // This is... not according to N2T spec (The og spec relies on software wipe), but put here for the sake of avoiding future confusion. 
     reg        mem_clearing;
     reg [14:0] clr_addr;
 
@@ -39,8 +41,10 @@ module top_computer(
         end
     end
 
-
-    // CPU CLOCK ENABLE - stop during clr and to 12.5Mhz
+    /////////////////////////////////////////////////////////////////////////////////
+    // CPU enable - stop during clr, slows cpu to 12.5Mhz
+    // This thing keeps the internals of CPU (not vga, not memory, not keyboard) stalled long enough to solve timing issues caused by registers.
+    // Note: Might be able to push further, you could experiment if 25 or 50MHZ still works for timing.
 
     reg [2:0] phase_counter;
 
@@ -51,7 +55,7 @@ module top_computer(
 
     wire cpu_enable = (phase_counter == 3'd7) && !mem_clearing;
 
-
+    ////////////////////////////////////////////////////////////////////////////////
     // VGA
     wire [15:0] vga_memory_in;
     wire [12:0] vga_memory_addr;
@@ -72,8 +76,8 @@ module top_computer(
         .green(Green)
     );
 
-
-    // KEYBOARD
+    ////////////////////////////////////////////////////////////
+    // Keyboard
     wire [15:0] current_key;
 
     keyboard keyboard(
@@ -84,19 +88,21 @@ module top_computer(
         .current_key(current_key)
     );
 
-
-    // CPU → Memory signal
+    ///////////////////////////////////////////////////////////
+    // CPU outputted Memory signal lines
     wire [15:0] cpu_outM;
     wire        cpu_writeM;
     wire [14:0] cpu_addressM;
 
 
-    // MUX：during clr,  FSM control Memory Port A
+    // Memory clear MUX, this thing is wired to the memory clearing logic up there.
+    // And is here to force all inputs  into zero & always load when clearing.
+    // Also is here to bridge between CPU and memory.
     wire [14:0] memory_address = mem_clearing ? clr_addr      : cpu_addressM;
     wire [15:0] memory_in      = mem_clearing ? 16'b0         : cpu_outM;
     wire        memory_load    = mem_clearing ? 1'b1          : cpu_writeM;
 
-
+    //////////////////////////////////////////////////////////
     // MEMORY
     wire [15:0] memory_out;
 
@@ -114,6 +120,7 @@ module top_computer(
         .second_out(vga_memory_in)
     );
 
+    /////////////////////////////////////////////////////////
     // ROM
     wire [15:0] nextPC;
     wire [15:0] instruction;
@@ -139,7 +146,7 @@ module top_computer(
     );
 
 
-    // 7-SEGMENT DISPLAY
+    // 7-segment display (for showing current keyboard key)
     top_led7seg_scan led_scan(
         .data_16(current_key),
         .clk(clk_board_100M),
